@@ -82,7 +82,6 @@ if os.path.exists('table.csv'):
     cont_date = table['date'].iloc[-1].date() # Most recent date scrape in CSV
     end_date = datetime.date.today() # Execution date of the script
     data = pd.concat([table.iloc[:-1], extract_data(cont_date, end_date)], ignore_index=True) # Remove the last row since being duplicated during concatenation
-    print(data.iloc[-3:])
     data.to_csv('table.csv', index=False)
 else:
     start_date = datetime.datetime.strptime("1997-11-01", "%Y-%m-%d").date() # Start date of lottery results in the website 
