@@ -5,6 +5,7 @@ from collections import Counter
 import pandas as pd
 import datetime
 import os
+import colorama
 
 # %%
 def add_months(original_date, months_to_add):
@@ -76,15 +77,22 @@ def extract_data(start_date, end_date):
     data['date'] = pd.to_datetime(data['date'], format='%b %d, %Y')
     data = data.sort_values(by='date') # Sort by date
     return data
+    
 # %%
-if os.path.exists('table.csv'):
-    table = pd.read_csv('table.csv', parse_dates=['date'])
-    cont_date = table['date'].iloc[-1].date() # Most recent date scrape in CSV
-    end_date = datetime.date.today() # Execution date of the script
-    data = pd.concat([table.iloc[:-1], extract_data(cont_date, end_date)], ignore_index=True) # Remove the last row since being duplicated during concatenation
-    data.to_csv('table.csv', index=False)
-else:
-    start_date = datetime.datetime.strptime("1997-11-01", "%Y-%m-%d").date() # Start date of lottery results in the website 
-    end_date = datetime.date.today() # Execution date of the script
-    table = extract_data(start_date, end_date)
-    table.to_csv('table.csv', index=False)
+if __name__ == "__main__":
+    if os.path.exists('table.csv'):
+        print('CSV already exists')
+        table = pd.read_csv('table.csv', parse_dates=['date'])
+        cont_date = table['date'].iloc[-1].date() # Most recent date scrape in CSV
+        end_date = datetime.date.today() # Execution date of the script
+        data = pd.concat([table.iloc[:-1], extract_data(cont_date, end_date)], ignore_index=True) # Remove the last row since being duplicated during concatenation
+        data.to_csv('table.csv', index=False)
+        print(colorama.Fore.GREEN, 'Finished appending latest results', colorama.Style.RESET_ALL)
+    else:
+        print('Creating CSV and inserting the results')
+        start_date = datetime.datetime.strptime("1997-11-01", "%Y-%m-%d").date() # Start date of lottery results in the website 
+        end_date = datetime.date.today() # Execution date of the script
+        table = extract_data(start_date, end_date)
+        print(colorama.Fore.GREEN, 'Finished inserting all the results', colorama.Style.RESET_ALL)
+        table.to_csv('table.csv', index=False)
+    
