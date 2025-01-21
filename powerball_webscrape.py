@@ -5,6 +5,7 @@ from collections import Counter
 import pandas as pd
 import datetime
 import os
+from datetime import timedelta
 import colorama
 
 # %%
@@ -19,7 +20,7 @@ def add_months(original_date, months_to_add):
     new_date (date): Returns new date
     '''
     new_month = original_date.month + months_to_add
-    new_year = original_date.year + (new_month - 1) // 12 # If new_month exceeds 12 then rollover
+    new_year = original_date.year + (new_month - 1) // 12 # If new_month exceeds 12 then rollover and -1 for month offset as month starts with 0
     new_month = (new_month - 1) % 12 + 1 # Adjust month to stay within 1-12 range
 
     try:
@@ -28,6 +29,23 @@ def add_months(original_date, months_to_add):
         last_day = calendar.monthrange(new_year, new_month)[1]
         new_date = original_date.replace(year=new_year, month=new_month, day=last_day)
     return new_date
+
+
+def add_days(original_date, days_to_add):
+    '''
+    Adds a specified number of days to the original date.
+
+    Args:
+    original_date (date): The original date.
+    days_to_add (int): The number of days to be added.
+
+    Returns:
+    new_date (date): The new date after adding the specified days.
+    '''
+    new_date = original_date + timedelta(days=days_to_add)
+    return new_date
+
+
 
 def extract_data(start_date, end_date):
     '''
@@ -42,10 +60,9 @@ def extract_data(start_date, end_date):
     data = pd.DataFrame(columns=['date']+ ['white_balls']+['powerball'])
     results = []
     # while start_date.date() < end_date:
-    while start_date < end_date:
-        temp_date = add_months(start_date, 3) # Temp date of 3 months since results > 3 months are consolidated
+    while start_date <= end_date:
+        temp_date = add_days(start_date, 90) # Temp date of 3 months since results > 3 months are consolidated
         url = f'https://www.powerball.com/previous-results?gc=powerball&sd={start_date}&ed={temp_date}'
-        start_date = temp_date
         response = requests.get(url)
 
         # Parse the html
@@ -72,7 +89,9 @@ def extract_data(start_date, end_date):
                         'white_balls': white_balls,
                         'powerball': powerball
                 })
+        start_date = add_days(temp_date,1)
     data = pd.concat([data, pd.DataFrame((results), columns=data.columns)], ignore_index=True)
+    #data = data.drop_duplicates(subset=['date', 'white_balls', 'powerball'], keep='last')
     data['date'] = data['date'].str.replace(r'^[A-Za-z]+, ', '', regex=True) # Convert the date column to correct type
     data['date'] = pd.to_datetime(data['date'], format='%b %d, %Y')
     data = data.sort_values(by='date') # Sort by date
@@ -89,7 +108,7 @@ if __name__ == "__main__":
         data.to_csv('table.csv', index=False)
         print(colorama.Fore.GREEN, 'Finished appending latest results', colorama.Style.RESET_ALL)
     else:
-        print('Creating CSV and inserting the results')
+        print('Creating new CSV and inserting the results')
         start_date = datetime.datetime.strptime("1997-11-01", "%Y-%m-%d").date() # Start date of lottery results in the website 
         end_date = datetime.date.today() # Execution date of the script
         table = extract_data(start_date, end_date)
