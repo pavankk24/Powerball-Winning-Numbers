@@ -80,7 +80,7 @@ def extract_data(start_date, end_date):
 
             white_ball = entry.find('div', class_='form-control col white-balls item-powerball')
             if white_ball:
-                white_balls = [ball.text for ball in entry.find_all('div', class_='form-control col white-balls item-powerball')]
+                white_balls = [int(ball.text) for ball in entry.find_all('div', class_='form-control col white-balls item-powerball')]
                 powerball = entry.find('div', class_='form-control col powerball item-powerball').text.strip() if entry.find('div', \
                     class_='form-control col powerball item-powerball') else None
 
